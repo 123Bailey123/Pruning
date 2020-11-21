@@ -74,12 +74,12 @@ class Branch(TrainingBranch):
                     # Compute the scores.
                     scores = strategy_instance.score(prune_model2, mask)
                     
-                    # plot_distribution(scores, strategy, prune_fraction, prune_iterations)
+                    plot_distribution(scores, strategy, prune_fraction, prune_iterations)
                     
                     # pdb.set_trace()
                     # Prune.
                     mask = unvectorize(prune(vectorize(scores), iteration_fraction, not prune_highest, mask=vectorize(mask)), mask)
-                    print ("Mask", mask['fc_layers.0.weight']*2.5)
+                    # print ("Mask", mask['fc_layers.0.weight']*2.5)
                     # pdb.set_trace()
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
