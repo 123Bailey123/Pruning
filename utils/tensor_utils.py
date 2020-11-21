@@ -89,7 +89,7 @@ def plot_distribution(scores, strategy, prune_fraction, prune_iterations):
         """.format(
             name, len(layer_score), min(layer_score), np.average(layer_score), np.median(layer_score), max(layer_score))
 
-        print (info)
+        # print (info)
 
         axs[i].hist(layer_score, bins=100)
         axs[i].set_xlabel("Scores")
