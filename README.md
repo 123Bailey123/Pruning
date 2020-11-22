@@ -39,6 +39,7 @@ python open_lth.py branch train oneshot --default_hparams=mnist_lenet_300_100 --
 
 
 
+python open_lth.py branch train oneshot --default_hparams=mnist_lenet_300_100 --strategy=synflow --prune_fraction=0.75 --prune_iterations=10
 
 ```
 will prune the ResNet-20 we created in (1) to 75% sparsity using magnitude pruning at initialization. It will then train the network normally from there.

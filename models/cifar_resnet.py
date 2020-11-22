@@ -145,7 +145,7 @@ class Model(base.Model):
             lr=0.1,
             gamma=0.1,
             weight_decay=1e-4,
-            training_steps='3ep',
+            training_steps='160ep',
         )
 
         pruning_hparams = sparse_global.PruningHparams(

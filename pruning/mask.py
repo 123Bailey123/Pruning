@@ -25,7 +25,7 @@ class Mask(dict):
             value = torch.as_tensor(value)
         if not isinstance(value, torch.Tensor):
             raise ValueError('value for key {} must be torch Tensor or numpy ndarray.'.format(key))
-        if ((value != 0) & (value != 1)).any(): raise ValueError('All entries must be 0 or 1.')
+        # if ((value != 0) & (value != 1)).any(): raise ValueError('All entries must be 0 or 1.')
 
         super(Mask, self).__setitem__(key, value)
 
