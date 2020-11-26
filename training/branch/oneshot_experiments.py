@@ -11,8 +11,7 @@ from platforms.platform import get_platform
 from pruning.mask import Mask
 from pruning.pruned_model import PrunedModel
 from training import train
-from utils.tensor_utils import vectorize, unvectorize, shuffle_tensor, shuffle_state_dict, prune, plot_distribution
-
+from utils.tensor_utils import *
 from training.branch.oneshot_experiments_helpers import random, magnitude, synflow, snip, grasp
 
 import pdb
@@ -64,9 +63,9 @@ class Branch(TrainingBranch):
             mask = Mask.ones_like(prune_model)
             iteration_fraction = 1 - (1 - prune_fraction) ** (1 / float(prune_iterations))
 
+            print("it fraction", iteration_fraction)
             if iteration_fraction > 0:
                 for it in range(0, prune_iterations):
-                    print ("prune iteration", prune_iterations)
                     # Make a defensive copy of the model and mask out the pruned weights.
                     prune_model2 = copy.deepcopy(prune_model)
                     with torch.no_grad():
@@ -75,17 +74,15 @@ class Branch(TrainingBranch):
                     # Compute the scores.
                     scores = strategy_instance.score(prune_model2, mask)
                     
-                    # print ("It fraction", iteration_fraction)                    
-
                     # Prune.
                     mask = unvectorize(prune(vectorize(scores), iteration_fraction, not prune_highest, mask=vectorize(mask)), mask)
                     
-                    # Plot graphs
-                    plot_distribution(scores, strategy, mask, prune_iterations)
-                    
-                    # print (torch.flatten(mask['fc_layers.0.weight']).data.numpy())
+            
+            # Plot graphs
+            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations)
 
-                    # pdb.set_trace()
+            # pdb.set_trace()
+
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
 
@@ -95,12 +92,13 @@ class Branch(TrainingBranch):
         # Load the mask.
         get_platform().barrier()
         mask = Mask.load(self.branch_root)
-        # print(mask.sparsity())
 
         # Determine the start step.
         state_path = self.desc.run_path(self.replicate, state_experiment)
         if reinitialize: model = models.registry.get(self.desc.model_hparams)
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
+        
+        plot_distribution_weights(model, strategy, mask, prune_iterations)
         model = PrunedModel(model, mask)
 
         # pdb.set_trace()

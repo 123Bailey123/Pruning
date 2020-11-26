@@ -74,21 +74,60 @@ def prune(tensor: torch.Tensor, prune_fraction: float, min = True, mask: torch.T
        return torch.where(tensor.double() < threshold, mask.double(), torch.zeros_like(tensor).double()).int()
 
 
-def plot_distribution(scores, strategy, mask, prune_iterations):
-
+def plot_distribution_weights(model, strategy, mask, prune_iterations):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +" Pruning"
     result_folder = "Data_Distribution/"
 
-    pdf = PdfPages(result_folder+file_name+".pdf")
+    pdf = PdfPages(result_folder+file_name+"_Weights.pdf")
 
-    for name, score in scores.items(): 
+    for name, param in model.named_parameters(): 
+        if "weight" in name:
+            layer_score = torch.flatten(param.data).data.numpy()
+            mask_data = torch.flatten(mask[name]).data.numpy()
+            mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
+            print ("Mask Weights %", mask_percent)
 
-        layer_score = (torch.flatten(score)).data.numpy()
+            updated_scores = layer_score*mask_data
+            w1 = np.count_nonzero(layer_score)
+            w2 = np.count_nonzero(updated_scores)
+
+            info = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+                "Weights Before Pruning: "+ str(w1) +" | Weights After Pruning: "+ str(w2) +" | Weights Removed: "+ str(w1-w2)
+            
+            bins = 100
+            fig = plt.figure()
+            plt.style.use('seaborn-deep')
+            plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
+            plt.legend(loc='upper right')
+            fig.suptitle(info)
+            fig.set_figheight(10)
+            fig.set_figwidth(10)
+            pdf.savefig(fig)
+
+
+            f = open(result_folder+"Plot Details.txt", "a")
+            f.write(info)
+            f.close()
+        
+    # remember to close the object to ensure writing multiple plots
+    pdf.close()
+        
+        
+def plot_distribution_scores(scores, strategy, mask, prune_iterations):
+    
+    # create a PdfPages object
+    file_name = strategy.capitalize() +" Pruning"
+    result_folder = "Data_Distribution/"
+
+    pdf = PdfPages(result_folder+file_name+"_Scores.pdf")
+
+    for name, param in scores.items(): 
+        layer_score = torch.flatten(param).data.numpy()
         mask_data = torch.flatten(mask[name]).data.numpy()
         mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
-        print ("Mask %", mask_percent)
+        print ("Mask Scores %", mask_percent)
 
         updated_scores = layer_score*mask_data
         w1 = np.count_nonzero(layer_score)
@@ -106,19 +145,6 @@ def plot_distribution(scores, strategy, mask, prune_iterations):
         fig.set_figheight(10)
         fig.set_figwidth(10)
         pdf.savefig(fig)
-
-        # result_folder = "Data_Distribution/"
-        # fig_name = result_folder+strategy+name+".pdf"
-        # plt.savefig(fig_name, bbox_inches='tight')
-
-
-        f = open(result_folder+"Plot Details.txt", "a")
-        f.write(info)
-        f.close()
-        
+    
     # remember to close the object to ensure writing multiple plots
     pdf.close()
-        
-        
-
-    # plt.show()
