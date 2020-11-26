@@ -11,7 +11,7 @@ from platforms.platform import get_platform
 from pruning.mask import Mask
 from pruning.pruned_model import PrunedModel
 from training import train
-from utils.tensor_utils import vectorize, unvectorize, shuffle_tensor, shuffle_state_dict, prune, plot_distribution, plot_distribution2
+from utils.tensor_utils import vectorize, unvectorize, shuffle_tensor, shuffle_state_dict, prune, plot_distribution
 
 from training.branch.oneshot_experiments_helpers import random, magnitude, synflow, snip, grasp
 
@@ -75,14 +75,17 @@ class Branch(TrainingBranch):
                     # Compute the scores.
                     scores = strategy_instance.score(prune_model2, mask)
                     
-                    # Plot graphs
-                    plot_distribution(scores, strategy, prune_fraction, prune_iterations)
-                    
-                    # pdb.set_trace()
+                    print ("It fraction", iteration_fraction)                    
 
                     # Prune.
                     mask = unvectorize(prune(vectorize(scores), iteration_fraction, not prune_highest, mask=vectorize(mask)), mask)
+                    
+                    # Plot graphs
+                    plot_distribution(scores, strategy, mask, prune_iterations)
+                    
+                    # print (torch.flatten(mask['fc_layers.0.weight']).data.numpy())
 
+                    pdb.set_trace()
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
 
@@ -92,7 +95,7 @@ class Branch(TrainingBranch):
         # Load the mask.
         get_platform().barrier()
         mask = Mask.load(self.branch_root)
-        print('Training')
+        # print(mask.sparsity())
 
         # Determine the start step.
         state_path = self.desc.run_path(self.replicate, state_experiment)
@@ -100,6 +103,7 @@ class Branch(TrainingBranch):
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
         model = PrunedModel(model, mask)
 
+        # pdb.set_trace()
         train.standard_train(model, self.branch_root, self.desc.dataset_hparams,
                              self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
                              evaluate_every_epoch=self.evaluate_every_epoch)

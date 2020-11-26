@@ -63,9 +63,11 @@ class Mask(dict):
     @property
     def sparsity(self):
         """Return the percent of weights that have been pruned as a decimal."""
-
+        
         unpruned = torch.sum(torch.tensor([torch.sum(v) for v in self.values()]))
         total = torch.sum(torch.tensor([torch.sum(torch.ones_like(v)) for v in self.values()]))
+
+        print ("Sparsity", 1 - unpruned.float() / total.float())
         return 1 - unpruned.float() / total.float()
 
     @property

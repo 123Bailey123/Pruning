@@ -10,6 +10,7 @@ import typing
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
+import math
 
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
     """Convert a state dict into a single column Tensor in a repeatable way."""
@@ -64,16 +65,16 @@ def prune(tensor: torch.Tensor, prune_fraction: float, min = True, mask: torch.T
     num_to_prune = np.ceil(torch.sum(mask).item() * prune_fraction).astype(int)
     sorted_tensor = torch.sort(tensor[mask == 1].reshape(-1)).values
 
-    
+    print ("num to prune", num_to_prune)
     if min:
        threshold = sorted_tensor[num_to_prune].double()
-       return torch.where(tensor.double() > threshold, (mask.double())*1.3, torch.zeros_like(tensor).double())
+       return torch.where(tensor.double() > threshold, mask.double(), torch.zeros_like(tensor).double())
     else:
        threshold = sorted_tensor[len(sorted_tensor) - num_to_prune]
        return torch.where(tensor.double() < threshold, mask.double(), torch.zeros_like(tensor).double()).int()
 
 
-def plot_distribution(scores, strategy, prune_fraction, prune_iterations):
+def plot_distribution(scores, strategy, mask, prune_iterations):
 
     
     # create a PdfPages object
@@ -83,83 +84,41 @@ def plot_distribution(scores, strategy, prune_fraction, prune_iterations):
     pdf = PdfPages(result_folder+file_name+".pdf")
 
     for name, score in scores.items(): 
-        info = title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(prune_fraction) + " | Prune Iterations: "+ str(prune_iterations)
 
-        fig, axs = plt.subplots(2)
-        fig.suptitle(title)
         layer_score = (torch.flatten(score)).data.numpy()
+        mask_data = torch.flatten(mask[name]).data.numpy()
+        mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
+        print ("Mask %", mask_percent)
 
-        info += """
-        Layer Name: {}, Layer Size: {}
-        Min Score: {}
-        Average Score: {}
-        Median Score: {}
-        Max Score: {}  
-        """.format(
-            name, len(layer_score), min(layer_score), np.average(layer_score), np.median(layer_score), max(layer_score))
+        updated_scores = layer_score*mask_data
+        w1 = np.count_nonzero(layer_score)
+        w2 = np.count_nonzero(updated_scores)
 
-        print (info)
+        info = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+            "Weights Before Pruning: "+ str(w1) +" | Weights After Pruning: "+ str(w2) +" | Weights Removed: "+ str(w1-w2)
         
-        axs[0].hist(layer_score, bins=100)
-        axs[0].set_xlabel("Scores")
-        axs[0].set_ylabel("Frequency")
-        # axs[0].set_title(name)
-
-        sns.distplot(layer_score, ax=axs[1])
-        axs[1].set_xlabel("Scores")
-        axs[1].set_ylabel("Density")
-        # axs[1].set_title(name)
-
+        bins = 100
+        fig = plt.figure()
+        plt.style.use('seaborn-deep')
+        plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
+        plt.legend(loc='upper right')
+        fig.suptitle(info)
         fig.set_figheight(10)
         fig.set_figwidth(10)
-        
         pdf.savefig(fig)
+
+        result_folder = "Data_Distribution/"
+        fig_name = result_folder+strategy+name+".pdf"
+        plt.savefig(fig_name, bbox_inches='tight')
+
+
+        f = open(result_folder+"Plot Details.txt", "a")
+        f.write(info)
+        f.close()
         
     # remember to close the object to ensure writing multiple plots
     pdf.close()
         
-        # result_folder = "Data_Distribution/"
-        # fig_name = result_folder+strategy+name+".pdf"
-        # plt.savefig(fig_name, bbox_inches='tight')
-
-
-        # f = open(result_folder+"Plot Details.txt", "a")
-        # f.write(info)
-        # f.close()
+        
 
     # plt.show()
-
-
-
-def plot_distribution2(x):
-    fig, axs = plt.subplots(len(scores.keys()))
-    info = title = "\n"+strategy +" pruning | Prune %: "+ str(prune_fraction) + "| Prune Iterations: "+ str(prune_iterations)
-    fig.suptitle(title)
-    
-
-    i = 0    
-    for name, score in scores.items(): 
-        layer_score = (torch.flatten(score)).data.numpy()
-
-        axs[i].hist(layer_score, bins=100)
-        axs[i].set_xlabel("Scores")
-        axs[i].set_ylabel("Frequency")
-        axs[i].set_title(name)
-        fig.set_figheight(5)
-        fig.set_figwidth(5)
-        i+=1
-
-    result_folder = "Data_Distribution/"
-    fig_name = result_folder+strategy+".pdf"
-    plt.savefig(fig_name, bbox_inches='tight')
-
-
-    # print ("Inside Tensorboard plot")
-    # from torch.utils.tensorboard import SummaryWriter
-
-    # writer = SummaryWriter()
-
-    # for n_iter in range(len(x)):
-    #     writer.add_scalar('Loss/train', x[n_iter], n_iter)
-
-    # writer.flush()
