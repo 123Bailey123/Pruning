@@ -107,9 +107,9 @@ def plot_distribution(scores, strategy, mask, prune_iterations):
         fig.set_figwidth(10)
         pdf.savefig(fig)
 
-        result_folder = "Data_Distribution/"
-        fig_name = result_folder+strategy+name+".pdf"
-        plt.savefig(fig_name, bbox_inches='tight')
+        # result_folder = "Data_Distribution/"
+        # fig_name = result_folder+strategy+name+".pdf"
+        # plt.savefig(fig_name, bbox_inches='tight')
 
 
         f = open(result_folder+"Plot Details.txt", "a")
