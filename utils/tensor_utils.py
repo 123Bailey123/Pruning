@@ -99,6 +99,8 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
             bins = 100
             fig = plt.figure()
             plt.style.use('seaborn-deep')
+            plt.xlabel("Weights")
+            plt.ylabel("Frequency")
             plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
             plt.legend(loc='upper right')
             fig.suptitle(info)
@@ -139,6 +141,8 @@ def plot_distribution_scores(scores, strategy, mask, prune_iterations):
         bins = 100
         fig = plt.figure()
         plt.style.use('seaborn-deep')
+        plt.xlabel("Scores")
+        plt.ylabel("Frequency")
         plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
         plt.legend(loc='upper right')
         fig.suptitle(info)
