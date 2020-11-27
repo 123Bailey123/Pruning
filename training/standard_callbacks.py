@@ -89,9 +89,14 @@ def create_eval_callback(eval_name: str, loader: DataLoader, verbose=False):
             if verbose:
                 nonlocal time_of_last_call
                 elapsed = 0 if time_of_last_call is None else time.time() - time_of_last_call
-                print('{}\tep {:03d} it {:03d} loss {:.3f} acc1 {:.2f}% acc5 {:.2f}% ex {:d} time {:.2f}s'.format(
+                training_info = '{}\tep {:03d} it {:03d} loss {:.3f} acc1 {:.2f}% acc5 {:.2f}% ex {:d} time {:.2f}s'.format(
                     eval_name, step.ep, step.it, total_loss/example_count, 100 * top1_correct/example_count,
-                    100 * top5_correct/example_count, int(example_count), elapsed))
+                    100 * top5_correct/example_count, int(example_count), elapsed)
+                print(training_info)
+
+                f = open("Data_Distribution/Plot_Details.txt", "a")
+                f.write("\n"+training_info)
+                f.close()
                 time_of_last_call = time.time()
 
     return eval_callback

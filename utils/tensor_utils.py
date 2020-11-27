@@ -12,6 +12,8 @@ import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 import math
 
+result_folder = "Data_Distribution/"
+
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
     """Convert a state dict into a single column Tensor in a repeatable way."""
 
@@ -78,9 +80,11 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +" Pruning"
-    result_folder = "Data_Distribution/"
-
+    pruning_type = strategy.capitalize() +" Pruning"
     pdf = PdfPages(result_folder+file_name+"_Weights.pdf")
+
+    f = open(result_folder+ "Plot_Details.txt", "a")
+    f.write("\n\n"+pruning_type)
 
     for name, param in model.named_parameters(): 
         if name in mask:
@@ -93,8 +97,8 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
             w1 = np.count_nonzero(layer_score)
             w2 = np.count_nonzero(updated_scores)
 
-            info = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-                "Weights Before Pruning: "+ str(w1) +" | Weights After Pruning: "+ str(w2) +" | Weights Removed: "+ str(w1-w2)
+            title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+                "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2)
             
             bins = 100
             fig = plt.figure()
@@ -103,17 +107,12 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
             plt.ylabel("Frequency")
             plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
             plt.legend(loc='upper right')
-            fig.suptitle(info)
+            fig.suptitle(title)
             fig.set_figheight(10)
             fig.set_figwidth(10)
             pdf.savefig(fig)
 
-
-            f = open(result_folder+"Plot Details.txt", "a")
-            f.write(info)
-            f.close()
-        
-    # remember to close the object to ensure writing multiple plots
+    f.close()
     pdf.close()
         
         
@@ -121,8 +120,7 @@ def plot_distribution_scores(scores, strategy, mask, prune_iterations):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +" Pruning"
-    result_folder = "Data_Distribution/"
-
+    
     pdf = PdfPages(result_folder+file_name+"_Scores.pdf")
 
     for name, param in scores.items(): 
@@ -135,8 +133,8 @@ def plot_distribution_scores(scores, strategy, mask, prune_iterations):
         w1 = np.count_nonzero(layer_score)
         w2 = np.count_nonzero(updated_scores)
 
-        info = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-            "Weights Before Pruning: "+ str(w1) +" | Weights After Pruning: "+ str(w2) +" | Weights Removed: "+ str(w1-w2)
+        title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+            "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2)
         
         bins = 100
         fig = plt.figure()
@@ -145,7 +143,7 @@ def plot_distribution_scores(scores, strategy, mask, prune_iterations):
         plt.ylabel("Frequency")
         plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
         plt.legend(loc='upper right')
-        fig.suptitle(info)
+        fig.suptitle(title)
         fig.set_figheight(10)
         fig.set_figwidth(10)
         pdf.savefig(fig)

@@ -63,7 +63,6 @@ class Branch(TrainingBranch):
             mask = Mask.ones_like(prune_model)
             iteration_fraction = 1 - (1 - prune_fraction) ** (1 / float(prune_iterations))
 
-            print("it fraction", iteration_fraction)
             if iteration_fraction > 0:
                 for it in range(0, prune_iterations):
                     # Make a defensive copy of the model and mask out the pruned weights.
@@ -100,6 +99,7 @@ class Branch(TrainingBranch):
         
         plot_distribution_weights(model, strategy, mask, prune_iterations)
         model = PrunedModel(model, mask)
+
 
         # pdb.set_trace()
         train.standard_train(model, self.branch_root, self.desc.dataset_hparams,

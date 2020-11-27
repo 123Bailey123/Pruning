@@ -1,0 +1,7 @@
+
+
+Grasp10 Pruning
+test	ep 000 it 000 loss 2.309 acc1 5.41% acc5 48.62% ex 10000 time 0.00s
+test	ep 001 it 000 loss 0.397 acc1 87.69% acc5 99.35% ex 10000 time 8.48s
+test	ep 002 it 000 loss 0.281 acc1 91.77% acc5 99.58% ex 10000 time 8.42s
+test	ep 003 it 000 loss 0.250 acc1 92.22% acc5 99.63% ex 10000 time 8.50s
