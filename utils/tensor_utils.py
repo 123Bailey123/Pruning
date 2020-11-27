@@ -83,7 +83,7 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
     pdf = PdfPages(result_folder+file_name+"_Weights.pdf")
 
     for name, param in model.named_parameters(): 
-        if "weight" in name:
+        if name in mask:
             layer_score = torch.flatten(param.data).data.numpy()
             mask_data = torch.flatten(mask[name]).data.numpy()
             mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
