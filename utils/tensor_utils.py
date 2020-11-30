@@ -194,7 +194,7 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
 
 
             title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-            "Mask Percent: " + mask_percent +" Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
+            "Mask %:: " + mask_percent +" | Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
 
             fig = plt.figure()
             plt.xlabel("Scores")
