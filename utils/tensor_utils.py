@@ -12,7 +12,6 @@ import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 import math
 
-result_folder = "Data_Distribution/"
 
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
     """Convert a state dict into a single column Tensor in a repeatable way."""
@@ -76,7 +75,7 @@ def prune(tensor: torch.Tensor, prune_fraction: float, min = True, mask: torch.T
        return torch.where(tensor.double() < threshold, mask.double(), torch.zeros_like(tensor).double()).int()
 
 
-def plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
+def plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +"_Pruning"
@@ -123,7 +122,7 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations, reinitial
     pdf.close()
         
         
-def plot_distribution_scores(scores, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
+def plot_distribution_scores(scores, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +"_Pruning"
@@ -166,7 +165,7 @@ def plot_distribution_scores(scores, strategy, mask, prune_iterations, reinitial
     # remember to close the object to ensure writing multiple plots
     pdf.close()
 
-def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
+def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder):
     
     # create a PdfPages object
     file_name = strategy.capitalize() +"_Pruning"

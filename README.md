@@ -7,10 +7,11 @@ This codebase is a fork of the OpenLTH codebase created by Facebook. For details
 To create a network to prune, use the `train` option for OpenLTH:
 
 ```
+git clone https://github.com/sahibsin/Pruning.git
 
-!python open_lth.py train --default_hparams=mnist_lenet_300_100
+python open_lth.py train --default_hparams=mnist_lenet_300_100
 
-!python open_lth.py train --default_hparams=cifar_resnet_20
+python open_lth.py train --default_hparams=cifar_resnet_20
 
 ```
 

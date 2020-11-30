@@ -19,6 +19,7 @@ import pdb
 strategies = [random.RandomPruning, magnitude.MagnitudePruning, synflow.SynFlow, snip.SNIP, grasp.GraSP]
 
 
+
 class Branch(TrainingBranch):
     def branch_function(
         self,
@@ -47,6 +48,12 @@ class Branch(TrainingBranch):
             mask = Mask.load(self.branch_root)
         except:
             mask = None
+
+        result_folder = "Data_Distribution/"
+        if reinitialize:
+            result_folder = "Data_Distribution_Reinit/"
+        elif randomize_layerwise:
+            result_folder = "Data_Distribution__Randomize_Layerwise/"
 
         if not mask and get_platform().is_primary_process:
             # Gather the weights that will be used for pruning.
@@ -82,8 +89,8 @@ class Branch(TrainingBranch):
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
 
             # Plot graphs
-            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise)            
-            plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise)
+            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)            
+            plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
             # pdb.set_trace()
 
@@ -99,7 +106,7 @@ class Branch(TrainingBranch):
         if reinitialize: model = models.registry.get(self.desc.model_hparams)
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
 
-        plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise)
+        plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
         model = PrunedModel(model, mask)
 
 
