@@ -76,15 +76,21 @@ def prune(tensor: torch.Tensor, prune_fraction: float, min = True, mask: torch.T
        return torch.where(tensor.double() < threshold, mask.double(), torch.zeros_like(tensor).double()).int()
 
 
-def plot_distribution_weights(model, strategy, mask, prune_iterations):
+def plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
     
     # create a PdfPages object
-    file_name = strategy.capitalize() +" Pruning"
+    file_name = strategy.capitalize() +"_Pruning"
+
+    if reinitialize:
+        file_name+= "_Reinit"
+    if randomize_layerwise:
+        file_name+= "_Randomize_layerwise"
+
     pruning_type = strategy.capitalize() +" Pruning"
     pdf = PdfPages(result_folder+file_name+"_Weights.pdf")
 
     f = open(result_folder+ "Plot_Details.txt", "a")
-    f.write("\n\n"+pruning_type)
+    f.write("\n\n"+file_name)
 
     for name, param in model.named_parameters(): 
         if name in mask:
@@ -98,55 +104,108 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations):
             w2 = np.count_nonzero(updated_scores)
 
             title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-                "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2)
+                "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2) +"\n" \
+                    "Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
             
             bins = 100
             fig = plt.figure()
-            plt.style.use('seaborn-deep')
             plt.xlabel("Weights")
             plt.ylabel("Frequency")
-            plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
+            plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'], color=["red","blue"])
             plt.legend(loc='upper right')
             fig.suptitle(title)
             fig.set_figheight(10)
             fig.set_figwidth(10)
             pdf.savefig(fig)
 
+            # plt.show()
     f.close()
     pdf.close()
         
         
-def plot_distribution_scores(scores, strategy, mask, prune_iterations):
+def plot_distribution_scores(scores, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
     
     # create a PdfPages object
-    file_name = strategy.capitalize() +" Pruning"
-    
+    file_name = strategy.capitalize() +"_Pruning"
+
+    if reinitialize:
+        file_name+= "_Reinit"
+    if randomize_layerwise:
+        file_name+= "_Randomize_layerwise"
+
     pdf = PdfPages(result_folder+file_name+"_Scores.pdf")
 
     for name, param in scores.items(): 
-        layer_score = torch.flatten(param).data.numpy()
+        original_score = torch.flatten(param).data.numpy()
         mask_data = torch.flatten(mask[name]).data.numpy()
         mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
         print ("Mask Scores %", mask_percent)
 
-        updated_scores = layer_score*mask_data
-        w1 = np.count_nonzero(layer_score)
+        # updated_scores = original_score*mask_data
+        updated_scores = [original_score[i] for i in range(len(mask_data)) if mask_data[i]==1]
+
+        w1 = np.count_nonzero(original_score)
         w2 = np.count_nonzero(updated_scores)
 
         title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-            "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2)
+            "Weights Before Pruning: "+ str(w1) +" | Weights Removed: "+ str(w1-w2)+" | Weights After Pruning: "+ str(w2)+"\n" \
+            "Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
         
         bins = 100
         fig = plt.figure()
-        plt.style.use('seaborn-deep')
         plt.xlabel("Scores")
         plt.ylabel("Frequency")
-        plt.hist([layer_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'])
+        plt.hist([original_score, updated_scores], bins, label=['Before Pruning', 'After Pruning'], color=["red","blue"])
         plt.legend(loc='upper right')
         fig.suptitle(title)
         fig.set_figheight(10)
         fig.set_figwidth(10)
         pdf.savefig(fig)
-    
+
+    # plt.show()
     # remember to close the object to ensure writing multiple plots
+    pdf.close()
+
+def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise):
+    
+    # create a PdfPages object
+    file_name = strategy.capitalize() +"_Pruning"
+    if reinitialize:
+        file_name+= "_Reinit"
+    if randomize_layerwise:
+        file_name+= "_Randomize_layerwise"
+
+    pruning_type = strategy.capitalize() +" Pruning"
+    pdf = PdfPages(result_folder+file_name+"_Weights_Scatter.pdf")
+
+    f = open(result_folder+ "Plot_Details.txt", "a")
+    f.write("\n\n"+pruning_type)
+
+    for name, param in model.named_parameters(): 
+        if name in mask:
+            weight_layer = torch.flatten(param.data).data.numpy()
+            score_layer = torch.flatten(scores[name]).data.numpy()
+
+            mask_data = torch.flatten(mask[name]).data.numpy()
+            mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
+            masking_indexes = [i for i in range(len(mask_data)) if mask_data[i]==0]
+            mask_weights = [weight_layer[i] for i in masking_indexes]
+            mask_scores = [score_layer[i] for i in masking_indexes]
+
+
+            title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+            "Mask Percent: " + mask_percent +" Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
+
+            fig = plt.figure()
+            plt.xlabel("Scores")
+            plt.ylabel("Weights")
+            plt.scatter(score_layer, weight_layer, alpha=0.05)
+            plt.axvline(x=max(mask_scores), c='r')
+            fig.suptitle(title)
+            fig.set_figheight(10)
+            fig.set_figwidth(10)
+            pdf.savefig(fig)
+
+    # plt.show()
+    f.close()
     pdf.close()

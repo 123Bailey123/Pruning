@@ -77,13 +77,15 @@ class Branch(TrainingBranch):
                     mask = unvectorize(prune(vectorize(scores), iteration_fraction, not prune_highest, mask=vectorize(mask)), mask)
                     
             
-            # Plot graphs
-            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations)
-
-            # pdb.set_trace()
 
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
+
+            # Plot graphs
+            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise)            
+            plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise)
+
+            # pdb.set_trace()
 
             mask = Mask({k: v.clone().detach() for k, v in mask.items()})
             mask.save(self.branch_root)
@@ -96,15 +98,15 @@ class Branch(TrainingBranch):
         state_path = self.desc.run_path(self.replicate, state_experiment)
         if reinitialize: model = models.registry.get(self.desc.model_hparams)
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
-        
-        plot_distribution_weights(model, strategy, mask, prune_iterations)
+
+        plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise)
         model = PrunedModel(model, mask)
 
 
         # pdb.set_trace()
-        train.standard_train(model, self.branch_root, self.desc.dataset_hparams,
-                             self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
-                             evaluate_every_epoch=self.evaluate_every_epoch)
+        # train.standard_train(model, self.branch_root, self.desc.dataset_hparams,
+        #                      self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
+        #                      evaluate_every_epoch=self.evaluate_every_epoch)
 
     @staticmethod
     def description():
