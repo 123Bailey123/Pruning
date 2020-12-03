@@ -88,14 +88,14 @@ class Branch(TrainingBranch):
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
 
-            # Plot graphs
+            mask = Mask({k: v.clone().detach() for k, v in mask.items()})
+            mask.save(self.branch_root)
+
+            # Plot graphs (Move below mask save?)
             plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)            
             plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
             # pdb.set_trace()
-
-            mask = Mask({k: v.clone().detach() for k, v in mask.items()})
-            mask.save(self.branch_root)
 
         # Load the mask.
         get_platform().barrier()
@@ -107,6 +107,7 @@ class Branch(TrainingBranch):
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
 
         plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
+
         model = PrunedModel(model, mask)
 
 

@@ -12,6 +12,8 @@ import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 import math
 
+import os
+from PyPDF2 import PdfFileMerger
 
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
     """Convert a state dict into a single column Tensor in a repeatable way."""
@@ -85,7 +87,6 @@ def plot_distribution_weights(model, strategy, mask, prune_iterations, reinitial
     if randomize_layerwise:
         file_name+= "_Randomize_layerwise"
 
-    pruning_type = strategy.capitalize() +" Pruning"
     pdf = PdfPages(result_folder+file_name+"_Weights.pdf")
 
     f = open(result_folder+ "Plot_Details.txt", "a")
@@ -193,7 +194,7 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
 
 
             title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-            "Mask %:: " + mask_percent +" | Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
+            "Mask %: " + mask_percent +" | Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
 
             fig = plt.figure()
             plt.xlabel("Scores")
@@ -208,3 +209,13 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
     # plt.show()
     f.close()
     pdf.close()
+
+def merge_pdf(path):
+    merger = PdfFileMerger()
+    print (path)
+    for filename in os.listdir(path):
+        if filename.endswith(".pdf"):
+            merger.append(path+filename)
+
+    merger.write(path[:-1]+"_combined.pdf")
+    merger.close()
