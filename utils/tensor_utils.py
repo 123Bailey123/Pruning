@@ -12,8 +12,6 @@ import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 import math
 
-import os
-from PyPDF2 import PdfFileMerger
 
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
     """Convert a state dict into a single column Tensor in a repeatable way."""
@@ -188,19 +186,32 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
 
             mask_data = torch.flatten(mask[name]).data.numpy()
             mask_percent = "%.2f" % (((len(mask_data)-sum(mask_data))/len(mask_data))*100)
+
+            # Which indexes, weights and scores will be pruned
             masking_indexes = [i for i in range(len(mask_data)) if mask_data[i]==0]
             mask_weights = [weight_layer[i] for i in masking_indexes]
             mask_scores = [score_layer[i] for i in masking_indexes]
 
-
-            title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
-            "Mask %: " + mask_percent +" | Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
+            # Which indexes, weights and scores will remain
+            rem_indexes = [i for i in range(len(mask_data)) if mask_data[i]!=0]
+            rem_weights = [weight_layer[i] for i in rem_indexes]
+            rem_scores = [score_layer[i] for i in rem_indexes]
 
             fig = plt.figure()
             plt.xlabel("Scores")
             plt.ylabel("Weights")
-            plt.scatter(score_layer, weight_layer, alpha=0.05)
-            plt.axvline(x=max(mask_scores), c='r')
+
+            if reinitialize or randomize_layerwise:
+                plt.scatter(rem_scores, rem_weights, alpha=0.05, c='b')
+                plt.scatter(mask_scores, mask_weights, alpha=0.05, c='r')
+
+            else:
+                plt.scatter(score_layer, weight_layer, alpha=0.05)
+                plt.axvline(x=max(mask_scores), c='r')
+
+            title = "\n"+strategy.capitalize() +" Pruning | "+name+ "\n"+ "Prune %: "+ str(mask_percent) + " | Prune Iterations: "+ str(prune_iterations) +"\n" \
+                "Mask %: " + mask_percent +" | Reinitialize: " + str(reinitialize) +" | Randomize Layerwise: "+ str(randomize_layerwise)
+
             fig.suptitle(title)
             fig.set_figheight(10)
             fig.set_figwidth(10)
@@ -210,12 +221,3 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
     f.close()
     pdf.close()
 
-def merge_pdf(path):
-    merger = PdfFileMerger()
-    print (path)
-    for filename in os.listdir(path):
-        if filename.endswith(".pdf"):
-            merger.append(path+filename)
-
-    merger.write(path[:-1]+"_combined.pdf")
-    merger.close()

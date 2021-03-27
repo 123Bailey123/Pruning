@@ -82,8 +82,6 @@ class Branch(TrainingBranch):
                     
                     # Prune.
                     mask = unvectorize(prune(vectorize(scores), iteration_fraction, not prune_highest, mask=vectorize(mask)), mask)
-                    
-            
 
             # Shuffle randomly per layer.
             if randomize_layerwise: mask = shuffle_state_dict(mask, seed=seed)
@@ -92,6 +90,7 @@ class Branch(TrainingBranch):
             mask.save(self.branch_root)
 
             # Plot graphs (Move below mask save?)
+
             plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)            
             plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
