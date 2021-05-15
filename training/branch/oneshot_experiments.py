@@ -91,8 +91,8 @@ class Branch(TrainingBranch):
 
             # Plot graphs (Move below mask save?)
 
-            plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)            
-            plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
+            # plot_distribution_scores(strategy_instance.score(prune_model, mask), strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)            
+            # plot_distribution_scatter(strategy_instance.score(prune_model, mask), prune_model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
             # pdb.set_trace()
 
@@ -105,15 +105,18 @@ class Branch(TrainingBranch):
         if reinitialize: model = models.registry.get(self.desc.model_hparams)
         else: model = models.registry.load(state_path, state_step, self.desc.model_hparams)
 
-        plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
+        # plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
         model = PrunedModel(model, mask)
 
 
         # pdb.set_trace()
-        # train.standard_train(model, self.branch_root, self.desc.dataset_hparams,
-        #                      self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
-        #                      evaluate_every_epoch=self.evaluate_every_epoch)
+        train.standard_train(model, self.branch_root, self.desc.dataset_hparams,
+                             self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
+                             evaluate_every_epoch=self.evaluate_every_epoch)
+
+        weights_analysis(model, strategy, reinitialize, randomize_layerwise, result_folder, "post_training")
+
 
     @staticmethod
     def description():

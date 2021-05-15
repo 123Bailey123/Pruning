@@ -105,3 +105,6 @@ At both (1) and here, add the flag `--model_init=standard_normal`
 * `tinyimagenet` (the version we use in the main body; need to download, install according to `datasets/tinyimagenet.py`, and add to `platforms/local.py`)
 * `tinyimagenet2` (the version we use for Modified ResNet-18; need to download, install according to `datasets/tinyimagenet.py`, and add to `platforms/local.py`)
 * `imagenet` (need to download, install according to `datasets/tinyimagenet.py`, and add to `platforms/local.py`)
+
+#### Delete saved Model ####
+rm -rf /Users/sahib/open_lth_data2/*

@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 import math
+from math import log2
+
 
 
 def vectorize(state_dict: typing.Dict[str, torch.Tensor]):
@@ -221,3 +223,22 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
     f.close()
     pdf.close()
 
+
+def weights_analysis(model, strategy, reinitialize, randomize_layerwise, result_folder, status):
+    
+    # create a PdfPages object
+    file_name = strategy.capitalize() +"_Pruning"
+
+    if reinitialize:
+        file_name+= "_Reinit"
+    if randomize_layerwise:
+        file_name+= "_Randomize_layerwise"
+           
+    torch.save(model, file_name+'_model.pt')
+    torch.save(model.state_dict(), file_name+'.pt')
+
+
+ 
+# calculate the kl divergence
+def kl_divergence(p, q):
+	return sum(p[i] * log2(p[i]/q[i]) for i in range(len(p)))
