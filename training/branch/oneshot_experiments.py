@@ -107,6 +107,7 @@ class Branch(TrainingBranch):
 
         # plot_distribution_weights(model, strategy, mask, prune_iterations, reinitialize, randomize_layerwise, result_folder)
 
+        original_model = copy.deepcopy(model)
         model = PrunedModel(model, mask)
 
 
@@ -115,7 +116,8 @@ class Branch(TrainingBranch):
                              self.desc.training_hparams, start_step=start_step, verbose=self.verbose,
                              evaluate_every_epoch=self.evaluate_every_epoch)
 
-        weights_analysis(model, strategy, reinitialize, randomize_layerwise, result_folder, "post_training")
+        weights_analysis(original_model, strategy, reinitialize, randomize_layerwise, "original")
+        weights_analysis(model, strategy, reinitialize, randomize_layerwise,"pruned")
 
 
     @staticmethod

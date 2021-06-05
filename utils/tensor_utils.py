@@ -224,21 +224,20 @@ def plot_distribution_scatter(scores, model, strategy, mask, prune_iterations, r
     pdf.close()
 
 
-def weights_analysis(model, strategy, reinitialize, randomize_layerwise, result_folder, status):
+def weights_analysis(model, strategy, reinitialize, randomize_layerwise, status):
     
     # create a PdfPages object
-    file_name = strategy.capitalize() +"_Pruning"
+    file_name = strategy.capitalize() +"_Pruning_"
 
     if reinitialize:
-        file_name+= "_Reinit"
+        file_name+= "_Reinit_"
     if randomize_layerwise:
-        file_name+= "_Randomize_layerwise"
+        file_name+= "_Randomize_layerwise_"
            
-    torch.save(model, file_name+'_model.pt')
-    torch.save(model.state_dict(), file_name+'.pt')
+    torch.save(model.state_dict(), file_name+status+'.pt')
+    # torch.save(model, file_name+'_model.pt')
 
 
- 
 # calculate the kl divergence
 def kl_divergence(p, q):
 	return sum(p[i] * log2(p[i]/q[i]) for i in range(len(p)))
