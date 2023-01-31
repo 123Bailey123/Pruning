@@ -6,8 +6,10 @@
 import abc
 
 from foundations.hparams import PruningHparams
-from models import base
-from pruning.mask import Mask
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from pruning.mask import Mask
+    from models import base
 
 
 class Strategy(abc.ABC):
@@ -18,5 +20,5 @@ class Strategy(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def prune(pruning_hparams: PruningHparams, trained_model: base.Model, current_mask: Mask = None) -> Mask:
+    def prune(pruning_hparams: PruningHparams, trained_model: 'base.Model', current_mask: 'Mask' = None) -> 'Mask':
         pass

@@ -7,7 +7,9 @@ import dataclasses
 import numpy as np
 
 from foundations import hparams
-import models.base
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from models import base as models_base
 from pruning import base
 from pruning.mask import Mask
 
@@ -29,7 +31,7 @@ class Strategy(base.Strategy):
         return PruningHparams
 
     @staticmethod
-    def prune(pruning_hparams: PruningHparams, trained_model: models.base.Model, current_mask: Mask = None):
+    def prune(pruning_hparams: PruningHparams, trained_model: 'models_base.Model', current_mask: Mask = None):
         current_mask = Mask.ones_like(trained_model).numpy() if current_mask is None else current_mask.numpy()
 
         print ("Current values", current_mask.values())
